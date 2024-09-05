@@ -7,10 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import com.example.a24_09_sdv_m5a.model.MainViewModel
+import com.example.a24_09_sdv_m5a.ui.screens.SearchScreen
 import com.example.a24_09_sdv_m5a.ui.theme._24_09_sdv_m5ATheme
 
 class MainActivity : ComponentActivity() {
@@ -20,28 +19,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             _24_09_sdv_m5ATheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    val mainViewModel = MainViewModel()
+                    SearchScreen(modifier = Modifier.padding(innerPadding), mainViewModel)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    _24_09_sdv_m5ATheme {
-        Greeting("Android")
     }
 }

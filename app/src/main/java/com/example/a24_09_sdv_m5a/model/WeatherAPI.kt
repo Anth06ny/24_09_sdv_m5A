@@ -10,24 +10,12 @@ const val URL_API_WEATHER =
 
 //Utilisation
 fun main() {
-//    //Lance la requête et met le corps de la réponse dans html
-//    var html : String = WeatherAPI.sendGet("https://www.google.fr")
-//    //Affiche l'HTML
-//    println("html=$html")
-
     val list: List<WeatherBean> = WeatherAPI.loadWeathers("Nice")
     for (city in list) {
         println("Il fait ${city.main.temp}° à ${city.name} (id=${city.id}) avec un vent de ${city.wind.speed} m/s)")
         println("-Description : ${city.weather.getOrNull(0)?.description ?: "-"}")
         println("-Icône : ${city.weather.getOrNull(0)?.icon ?: "-"}")
     }
-
-    println(list)
-//    var user = WeatherAPI.loadRandomUser()
-//
-//    println("Il s'appelle ${user.name} pour le contacter :")
-//    println("Phone : ${user.coord?.phone ?: "-"}")
-//    println("Mail : ${user.coord?.mail ?: "-"}")
 }
 
 
@@ -46,14 +34,9 @@ object WeatherAPI {
             }
         }
 
+        Thread.sleep(3000)
+
         return data.list
-    }
-
-    fun loadWeatherAround(lat:Double, lon:Double): List<WeatherBean> {
-        //Réaliser la requête.
-        val json: String = sendGet("https://api.openweathermap.org/data/2.5/find?lat=$lat&lon=$lon&cnt=5&appid=b80967f0a6bd10d23e44848547b26550&units=metric&lang=fr")
-
-        return gson.fromJson(json, WeatherAroundBean::class.java).list
     }
 
     fun sendGet(url: String): String {
