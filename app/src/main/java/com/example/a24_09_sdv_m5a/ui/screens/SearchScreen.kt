@@ -1,7 +1,10 @@
 package com.example.a24_09_sdv_m5a.ui.screens
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,12 +22,18 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -37,12 +46,14 @@ import com.bumptech.glide.integration.compose.placeholder
 import com.example.a24_09_sdv_m5a.R
 import com.example.a24_09_sdv_m5a.model.MainViewModel
 import com.example.a24_09_sdv_m5a.model.PictureBean
+import com.example.a24_09_sdv_m5a.ui.MyError
 import com.example.a24_09_sdv_m5a.ui.theme._24_09_sdv_m5ATheme
 
 @Preview(showBackground = true, showSystemUi = true)
-@Preview(showBackground = true, showSystemUi = true, uiMode = UI_MODE_NIGHT_YES,
-locale = "fr"
-    )
+@Preview(
+    showBackground = true, showSystemUi = true, uiMode = UI_MODE_NIGHT_YES,
+    locale = "fr"
+)
 @Composable
 fun SearchScreenPreview() {
     //Il faut remplacer NomVotreAppliTheme par le thème de votre application
@@ -50,6 +61,9 @@ fun SearchScreenPreview() {
     _24_09_sdv_m5ATheme {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             val mainViewModel = MainViewModel()
+            mainViewModel.loadFakeData()
+            mainViewModel.runInProgress = true
+            mainViewModel.errorMessage = "Un message d'erreur"
             SearchScreen(mainViewModel = mainViewModel)
         }
     }
@@ -57,21 +71,35 @@ fun SearchScreenPreview() {
 
 @Composable
 fun SearchScreen(modifier: Modifier = Modifier, mainViewModel: MainViewModel) {
-    Column(modifier= modifier.fillMaxSize()) {
 
-        SearchBar()
+    var searchText = remember {
+        mutableStateOf("")
+    }
+
+    Column(modifier = modifier.fillMaxSize()) {
+
+        SearchBar(searchText = searchText)
+
+        AnimatedVisibility(visible = mainViewModel.runInProgress){
+            CircularProgressIndicator()
+        }
+
+        MyError(errorMessage = mainViewModel.errorMessage)
 
         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
-            items( mainViewModel.dataList.size) {
-                PictureRowItem(data =  mainViewModel.dataList[it])
+
+            val filterList = mainViewModel.dataList //.filter { it.title.contains(searchText.value, true) }
+
+            items(filterList.size) {
+                PictureRowItem(data = filterList[it])
             }
         }
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             Button(
-                onClick = { /* Do something! */ },
+                onClick = { searchText.value = "" },
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding
             ) {
                 Icon(
@@ -84,7 +112,7 @@ fun SearchScreen(modifier: Modifier = Modifier, mainViewModel: MainViewModel) {
             }
 
             Button(
-                onClick = { /* Do something! */ },
+                onClick = { mainViewModel.loadWeathers(searchText.value) },
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding
             ) {
                 Icon(
@@ -100,12 +128,11 @@ fun SearchScreen(modifier: Modifier = Modifier, mainViewModel: MainViewModel) {
 }
 
 @Composable
-fun SearchBar(modifier: Modifier = Modifier) {
-
+fun SearchBar(modifier: Modifier = Modifier,  searchText: MutableState<String>) {
 
     TextField(
-        value = "", //Valeur affichée
-        onValueChange = {newValue:String -> }, //Nouveau texte entrée
+        value = searchText.value, //Valeur affichée
+        onValueChange = { newValue: String ->  searchText.value  = newValue}, //Nouveau texte entrée
         leadingIcon = { //Image d'icone
             Icon(
                 imageVector = Icons.Default.Search,
@@ -125,14 +152,20 @@ fun SearchBar(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth() // Prend toute la largeur
             .heightIn(min = 56.dp) //Hauteur minimum
-    )}
+    )
+}
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable //Composable affichant 1 PictureBean
 fun PictureRowItem(modifier: Modifier = Modifier, data: PictureBean) {
-    Row(modifier = modifier
-        .fillMaxWidth()
-        .background(MaterialTheme.colorScheme.tertiary)) {
+
+    var expended by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.tertiary)
+    ) {
         GlideImage(
             model = data.url,
             //Pour aller le chercher dans string.xml
@@ -150,11 +183,18 @@ fun PictureRowItem(modifier: Modifier = Modifier, data: PictureBean) {
                 .widthIn(max = 100.dp)
         )
 
-        Column(modifier= Modifier.padding(10.dp)) {
+        Column(modifier = Modifier
+            .padding(10.dp)
+            .clickable {
+                expended = !expended
+            }) {
             Text(text = data.title, fontSize = 20.sp)
-            Text(text = data.longText.take(20) + "...",
+            Text(
+                text = if(expended) data.longText else  (data.longText.take(20) + "..."),
                 fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onTertiary)
+                color = MaterialTheme.colorScheme.onTertiary,
+                modifier = Modifier.animateContentSize()
+            )
         }
     }
 }

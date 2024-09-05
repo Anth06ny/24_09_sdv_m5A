@@ -53,7 +53,11 @@ dependencies {
     //JSon
     implementation("com.google.code.gson:gson:+")
 
+    //Image url
     implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
+
+    //Pour le ViewModel
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
 
     implementation(libs.androidx.core.ktx)

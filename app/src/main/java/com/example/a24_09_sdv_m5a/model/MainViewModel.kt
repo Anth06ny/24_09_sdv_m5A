@@ -1,5 +1,8 @@
 package com.example.a24_09_sdv_m5a.model
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -27,17 +30,17 @@ data class PictureBean(val id: Int, val url: String, val title: String, val long
 class MainViewModel : ViewModel() {
 
     //Données utilisées
-    var dataList: List<PictureBean> = ArrayList()
+    var dataList  by mutableStateOf<List<PictureBean>>(ArrayList())
 
     //Tache en cours
-    var runInProgress = false
+    var runInProgress by mutableStateOf(false)
 
     //Gestion de l'erreur
-    var errorMessage = ""
+    var errorMessage by mutableStateOf("")
 
-    init {//Création d'un jeu de donnée au démarrage
-        loadFakeData()
-    }
+//    init {//Création d'un jeu de donnée au démarrage
+//        loadFakeData()
+//    }
 
     fun loadFakeData(){
         dataList = listOf(PictureBean(1, "https://picsum.photos/200", "ABCD", LONG_TEXT),
